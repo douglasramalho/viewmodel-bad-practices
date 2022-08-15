@@ -4,7 +4,6 @@ import android.content.Context
 import androidx.lifecycle.*
 import br.com.douglasmotta.viewmodelbadpractices.data.NewsRepository
 import br.com.douglasmotta.viewmodelbadpractices.db.NewsEntity
-import br.com.douglasmotta.viewmodelbadpractices.domain.News
 import br.com.douglasmotta.viewmodelbadpractices.network.ApiService
 import kotlinx.coroutines.launch
 
