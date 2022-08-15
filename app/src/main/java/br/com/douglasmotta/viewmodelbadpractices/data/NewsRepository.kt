@@ -1,24 +1,36 @@
 package br.com.douglasmotta.viewmodelbadpractices.data
 
-import android.content.Context
-import br.com.douglasmotta.viewmodelbadpractices.db.NewsDatabase
+import br.com.douglasmotta.viewmodelbadpractices.db.NewsDao
 import br.com.douglasmotta.viewmodelbadpractices.db.NewsEntity
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.Flow
+import br.com.douglasmotta.viewmodelbadpractices.db.toDomain
+import br.com.douglasmotta.viewmodelbadpractices.network.ApiService
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
 
-class NewsRepository {
-
-    suspend fun saveNews(context: Context, newsList: List<NewsEntity>) {
-        val database = NewsDatabase.getDatabase(context)
-        withContext(Dispatchers.IO) {
-            database.newsDao().clearAll()
-            database.newsDao().insertAll(newsList)
-        }
+// Nunca passar o contexto da atividade para objetos Singleton
+// Passe sempre o contexto da aplicação
+class NewsRepository(
+    private val dispatcher: CoroutineDispatcher,
+    private val newsDao: NewsDao,
+    private val apiService: ApiService
+) {
+    val allNews = newsDao.getAll().map { newsEntityList ->
+        newsEntityList.map { it.toDomain() }
     }
 
-    fun getNews(context: Context): Flow<List<NewsEntity>> {
-        val database = NewsDatabase.getDatabase(context)
-        return database.newsDao().getAll()
+    suspend fun getAndStoreNews() {
+        val news = apiService.getNews().news.map { title ->
+            NewsEntity(title = title)
+        }
+
+        saveNews(news)
+    }
+
+    private suspend fun saveNews(newsList: List<NewsEntity>) {
+        withContext(dispatcher) {
+            newsDao.clearAll()
+            newsDao.insertAll(newsList)
+        }
     }
 }

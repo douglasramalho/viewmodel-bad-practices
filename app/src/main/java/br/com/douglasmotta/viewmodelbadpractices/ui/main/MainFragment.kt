@@ -1,14 +1,12 @@
 package br.com.douglasmotta.viewmodelbadpractices.ui.main
 
-import androidx.lifecycle.ViewModelProvider
 import android.os.Bundle
-import android.util.Log
-import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.lifecycle.viewModelScope
-import br.com.douglasmotta.viewmodelbadpractices.R
+import androidx.fragment.app.Fragment
+import androidx.lifecycle.ViewModelProvider
+import br.com.douglasmotta.viewmodelbadpractices.NewsApp
 import br.com.douglasmotta.viewmodelbadpractices.data.NewsRepository
 import br.com.douglasmotta.viewmodelbadpractices.databinding.MainFragmentBinding
 import br.com.douglasmotta.viewmodelbadpractices.network.ApiService
@@ -35,9 +33,11 @@ class MainFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         val viewModelFactory = MainViewModel.MainViewModelFactory(
-            requireContext(),
-            NewsRepository(),
-            ApiService()
+            NewsRepository(
+                Dispatchers.IO,
+                (activity?.application as NewsApp).database.newsDao(),
+                ApiService()
+            )
         )
 
         viewModel = ViewModelProvider(this, viewModelFactory)[MainViewModel::class.java]
@@ -52,7 +52,5 @@ class MainFragment : Fragment() {
                 binding.news.text = "${binding.news.text} $it"
             }
         }
-
-        viewModel.getNews()
     }
 }
